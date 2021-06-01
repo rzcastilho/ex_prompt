@@ -47,7 +47,7 @@ defmodule ExPromptTest do
                response = ExPrompt.confirm("Are you sure?")
                send(self(), answer)
                assert response == true
-             end) == "Are you sure? [Yn] "
+             end) == "Are you sure? [yn] "
 
       assert_received ^answer
     end
@@ -57,7 +57,7 @@ defmodule ExPromptTest do
                response = ExPrompt.confirm("Are you sure?")
                send(self(), answer)
                assert response == false
-             end) == "Are you sure? [Yn] "
+             end) == "Are you sure? [yn] "
 
       assert_received ^answer
     end
@@ -69,7 +69,7 @@ defmodule ExPromptTest do
              send(self(), "nein")
              send(self(), "no")
              assert answer == false
-           end) == "Are you sure? [Yn] "
+           end) == "Are you sure? [yn] "
 
     assert_received "nein"
     assert_received "no"
@@ -87,7 +87,7 @@ defmodule ExPromptTest do
                2) green
                3) blue
 
-             Favorite color? 
+             Favorite color?
              """
              |> String.trim_trailing("\n")
 
@@ -106,7 +106,7 @@ defmodule ExPromptTest do
                2) green
                3) blue
 
-             Favorite color? 
+             Favorite color?
              """
              |> String.trim_trailing("\n")
 
@@ -125,7 +125,7 @@ defmodule ExPromptTest do
                2) green
                3) blue
 
-             Favorite color? 
+             Favorite color?
              """
              |> String.trim_trailing("\n")
 
@@ -144,7 +144,7 @@ defmodule ExPromptTest do
                2) green
                3) blue
 
-             Favorite color? 
+             Favorite color?
              """
              |> String.trim_trailing("\n")
 
