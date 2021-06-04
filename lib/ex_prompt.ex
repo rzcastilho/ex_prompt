@@ -25,18 +25,19 @@ defmodule ExPrompt do
 
     ExPrompt.string("What is your name?\n")
 
-  To ask for a hostname if none is informed, defaults to `localhost`:
+  To ask for a hostname and if none is informed, defaults to `localhost`:
 
     ExPrompt.string("What is the hostname?\n", "localhost")
   """
+  @spec string(prompt) :: String.t()
   @spec string(prompt, String.t()) :: String.t()
   def string(prompt, default \\ "") do
     case IO.gets(string_prompt_formatter(prompt, default)) do
       :eof ->
-        default || ""
+        ""
 
       {:error, _reason} ->
-        default || ""
+        ""
 
       str ->
         case String.trim_trailing(str) do
@@ -79,10 +80,11 @@ defmodule ExPrompt do
 
     ExPrompt.confirm("Are you sure you want to delete this file?")
 
-  Same example returning false as default.
+  It's the same example above, returning false as default.
 
     ExPrompt.confirm("Are you sure you want to delete this file?", false)
   """
+  @spec confirm(prompt) :: boolean()
   @spec confirm(prompt, boolean() | nil) :: boolean()
   def confirm(prompt, default \\ nil) do
     answer =
@@ -113,11 +115,16 @@ defmodule ExPrompt do
   by the value that the user wrote.
 
   ## Examples
+  
+  To ask for a favorite color in a predefined list
 
     ExPrompt.choose("Favorite color?" , ~w(red green blue))
+  
+  It's the same example above, but defines to the second option (green) as default value if none is selected.
 
     ExPrompt.choose("Favorite color?" , ~w(red green blue), 2)
   """
+  @spec choose(prompt, choices) :: integer()
   @spec choose(prompt, choices, non_neg_integer()) :: integer()
   def choose(prompt, choices, default \\ 0) do
     IO.puts("")
@@ -131,19 +138,21 @@ defmodule ExPrompt do
       |> Enum.reduce("", fn {c, i}, acc ->
         "#{acc}\s\s#{i + 1}) #{c}\n"
       end)
-      |> Kernel.<>("\n" <> String.trim(prompt) <> "\s")
+      |> Kernel.<>(list_prompt_formatter(prompt, choices, default))
       |> string()
 
     try do
       n = String.to_integer(answer)
-      if n > 0 and n <= length(choices), do: n - 1, else: - 1
+      if n > 0 and n <= length(choices), do: n - 1, else: -1
     rescue
       _e in ArgumentError ->
         case answer do
-          "" -> default - 1
+          "" ->
+            default - 1
+
           _ ->
             case Enum.find_index(choices, &(&1 == answer)) do
-              nil -> - 1
+              nil -> -1
               idx -> idx
             end
         end
@@ -163,6 +172,7 @@ defmodule ExPrompt do
 
     ExPrompt.password("Password: ", false)
   """
+  @spec password(prompt) :: String.t()
   @spec password(prompt, hide :: boolean()) :: String.t()
   def password(prompt, hide \\ true) do
     prompt = String.trim(prompt)
@@ -203,4 +213,10 @@ defmodule ExPrompt do
   defp boolean_prompt_formatter(prompt, nil), do: "#{prompt} [yn] "
   defp boolean_prompt_formatter(prompt, true), do: "#{prompt} [Yn] "
   defp boolean_prompt_formatter(prompt, false), do: "#{prompt} [yN] "
+  
+  defp list_prompt_formatter(prompt, _choices, 0), do: "\n#{String.trim(prompt)}\s"
+  defp list_prompt_formatter(prompt, choices, default) do
+    "\n#{String.trim(prompt)} (#{Enum.at(choices, default - 1)})\s"
+  end
+
 end

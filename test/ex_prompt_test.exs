@@ -26,6 +26,14 @@ defmodule ExPromptTest do
 
     assert_received "blue"
   end
+  
+  test ".string/2 returns default value when empty is passed" do
+    default = "red"
+    assert capture_io("\n", fn ->
+             response = ExPrompt.string("Favorite color?", default)
+             assert response == default
+           end) == "(#{default}) Favorite color?"
+  end
 
   test ".string_required/1 keeps asking until we get an answer" do
     assert capture_io("blue", fn ->
@@ -75,6 +83,29 @@ defmodule ExPromptTest do
     assert_received "no"
   end
 
+  test ".confirm/2 succeeds when default value is provided'" do
+    default_values = [{true, "[Yn]"}, {false, "[yN]"}]
+
+    for {default, prompt} <- default_values do
+      assert capture_io("\n", fn ->
+               response = ExPrompt.confirm("Are you sure?", default)
+               assert response == default
+             end) == "Are you sure? #{prompt} "
+
+    end
+  end
+
+  test ".confirm/2 keeps asking when default value is provided but a non empty value is informed'" do
+    default_values = [{true, "[Yn]"}, {false, "[yN]"}]
+
+    for {default, prompt} <- default_values do
+      assert capture_io("non_boolean\nnon_empty\n\n", fn ->
+               response = ExPrompt.confirm("Are you sure?", default)
+               assert response == default
+             end) == String.duplicate("Are you sure? #{prompt} ", 3)
+    end
+  end
+
   test ".choose/2 succeeds by list index" do
     assert capture_io("1", fn ->
              idx = ExPrompt.choose("Favorite color?", ~w(red green blue))
@@ -87,7 +118,7 @@ defmodule ExPromptTest do
                2) green
                3) blue
 
-             Favorite color?
+             Favorite color? 
              """
              |> String.trim_trailing("\n")
 
@@ -106,7 +137,7 @@ defmodule ExPromptTest do
                2) green
                3) blue
 
-             Favorite color?
+             Favorite color? 
              """
              |> String.trim_trailing("\n")
 
@@ -125,7 +156,7 @@ defmodule ExPromptTest do
                2) green
                3) blue
 
-             Favorite color?
+             Favorite color? 
              """
              |> String.trim_trailing("\n")
 
@@ -144,11 +175,33 @@ defmodule ExPromptTest do
                2) green
                3) blue
 
-             Favorite color?
+             Favorite color? 
              """
              |> String.trim_trailing("\n")
 
     assert_received "none"
+  end
+  
+  test ".choose/3 succeeds with default value" do
+    assert capture_io("\n", fn ->
+             idx = ExPrompt.choose("Favorite color?", ~w(red green blue), 2)
+             assert idx == 1
+           end) ==
+             """
+
+               1) red
+               2) green
+               3) blue
+
+             Favorite color? (green) 
+             """
+             |> String.trim_trailing("\n")
+  end
+  
+  test ".choose/3 raise exception when default value is out ou bounds" do
+    assert_raise RuntimeError, fn ->
+      ExPrompt.choose("Favorite color?", ~w(red green blue), 4)
+    end
   end
 
   test ".password/2 hides the password by default (when passing true)" do
